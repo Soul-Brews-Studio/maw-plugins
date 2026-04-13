@@ -1,0 +1,17 @@
+{
+  "name": "wake",
+  "version": "1.0.0",
+  "entry": "./index.ts",
+  "sdk": "^1.0.0",
+  "description": "Spawn or attach to an oracle session",
+  "cli": {
+    "command": "wake",
+    "help": "maw wake <oracle|org/repo|URL> [task] [--task '<prompt>'] [--new <name>] [--fresh] [--no-attach] [--issue N] [--pr N] [--repo org/name] [--list]",
+    "flags": {
+      "--new": "string", "--incubate": "string", "--issue": "number",
+      "--pr": "number", "--repo": "string", "--task": "string",
+      "--fresh": "boolean", "--no-attach": "boolean", "--list": "boolean"
+    }
+  },
+  "api": { "path": "/api/wake", "methods": ["POST"] }
+}

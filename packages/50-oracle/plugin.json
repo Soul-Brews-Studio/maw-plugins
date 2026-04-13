@@ -1,0 +1,13 @@
+{
+  "name": "oracle",
+  "version": "1.0.0",
+  "entry": "./index.ts",
+  "sdk": "^1.0.0",
+  "description": "Oracle management — list, scan, fleet, about",
+  "cli": {
+    "command": "oracle",
+    "aliases": ["oracles"],
+    "help": "maw oracle [ls|scan|fleet|about <name>]"
+  },
+  "api": { "path": "/api/oracle", "methods": ["GET"] }
+}
