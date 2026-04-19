@@ -1,5 +1,5 @@
-import type { InvokeContext, InvokeResult } from "../../../plugin/types";
-import { cmdOracleAbout } from "../../oracle";
+import type { InvokeContext, InvokeResult } from "maw-js/sdk";
+import { cmdOracleAbout } from "./impl";
 
 export const command = {
   name: ["about", "info"],

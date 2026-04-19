@@ -1,7 +1,29 @@
 import { describe, it, expect, mock, beforeEach } from "bun:test";
-import type { InvokeContext } from "../../../plugin/types";
+import type { InvokeContext } from "maw-js/sdk";
 
-mock.module("../../oracle", () => ({
+mock.module("maw-js/sdk", () => ({
+  parseFlags: (args: string[], spec: Record<string, any>, positional = 0) => {
+    const out: Record<string, any> = { _: [] as string[] };
+    for (const k of Object.keys(spec)) out[k] = undefined;
+    let i = 0;
+    while (i < args.length) {
+      const a = args[i];
+      if (a in spec) {
+        const kind = spec[a];
+        if (kind === Boolean) { out[a] = true; i++; continue; }
+        out[a] = kind === Number ? Number(args[i + 1]) : args[i + 1];
+        i += 2;
+        continue;
+      }
+      out._.push(a);
+      i++;
+    }
+    void positional;
+    return out;
+  },
+}));
+
+mock.module("./impl", () => ({
   cmdOracleList: async () => {
     console.log("Oracle Fleet  (1/2 awake)");
   },

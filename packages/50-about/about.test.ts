@@ -1,10 +1,7 @@
 import { describe, it, expect, mock } from "bun:test";
-import { join } from "path";
-import type { InvokeContext } from "../../../plugin/types";
+import type { InvokeContext } from "maw-js/sdk";
 
-const root = join(import.meta.dir, "../../..");
-
-mock.module(join(root, "commands/oracle"), () => ({
+mock.module("./impl", () => ({
   cmdOracleAbout: async (oracle: string) => {
     console.log(`Oracle — ${oracle}`);
     console.log(`  Repo:      /home/neo/ghq/github.com/Soul-Brews-Studio/${oracle}-oracle`);

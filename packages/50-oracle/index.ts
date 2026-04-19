@@ -1,6 +1,6 @@
-import type { InvokeContext, InvokeResult } from "../../../plugin/types";
-import { cmdOracleList, cmdOracleAbout, cmdOracleScan, cmdOracleFleet } from "../../oracle";
-import { parseFlags } from "../../../cli/parse-args";
+import type { InvokeContext, InvokeResult } from "maw-js/sdk";
+import { parseFlags } from "maw-js/sdk";
+import { cmdOracleList, cmdOracleAbout, cmdOracleScan, cmdOracleFleet } from "./impl";
 
 export const command = {
   name: ["oracle", "oracles"],
