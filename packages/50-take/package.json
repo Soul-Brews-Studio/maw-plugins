@@ -1,0 +1,11 @@
+{
+  "name": "@maw-plugins/take",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Move a tmux window from one oracle session to another (vesicle transport).",
+  "type": "module",
+  "main": "./index.ts",
+  "peerDependencies": {
+    "maw-js": "*"
+  }
+}

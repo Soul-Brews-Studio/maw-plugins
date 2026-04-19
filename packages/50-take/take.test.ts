@@ -1,10 +1,7 @@
 import { describe, it, expect, mock } from "bun:test";
-import { join } from "path";
-import type { InvokeContext } from "../../../plugin/types";
+import type { InvokeContext } from "maw-js/sdk";
 
-const root = join(import.meta.dir, "../../..");
-
-mock.module(join(root, "commands/take"), () => ({
+mock.module("./impl", () => ({
   cmdTake: async (source: string, target?: string) => {
     console.log(`take ${source}${target ? ` → ${target}` : " (new session)"}`);
   },

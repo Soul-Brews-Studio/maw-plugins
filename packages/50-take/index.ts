@@ -1,5 +1,5 @@
-import type { InvokeContext, InvokeResult } from "../../../plugin/types";
-import { cmdTake } from "../../take";
+import type { InvokeContext, InvokeResult } from "maw-js/sdk";
+import { cmdTake } from "./impl";
 
 export const command = {
   name: ["take", "handover"],
