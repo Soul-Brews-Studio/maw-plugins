@@ -1,8 +1,7 @@
 import { describe, it, expect, mock, beforeEach, afterEach } from "bun:test";
-import type { InvokeContext } from "../../../plugin/types";
+import type { InvokeContext } from "maw-js/sdk";
 
-// Mock the transport command
-mock.module("../../transport", () => ({
+mock.module("./impl", () => ({
   cmdTransportStatus: async () => {
     console.log("Transport Status  (node: local)");
     console.log("  1. ●  tmux               connected  (local)");

@@ -1,0 +1,11 @@
+{
+  "name": "@maw-plugins/health",
+  "version": "1.0.0",
+  "private": true,
+  "description": "System health check — tmux, maw server, disk, memory, pm2, peers.",
+  "type": "module",
+  "main": "./index.ts",
+  "peerDependencies": {
+    "maw-js": "*"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@maw-plugins/transport",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Transport layer status and diagnostics",
+  "type": "module",
+  "main": "./index.ts",
+  "peerDependencies": {
+    "maw-js": "*"
+  }
+}

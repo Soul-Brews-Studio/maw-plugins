@@ -1,5 +1,5 @@
-import type { InvokeContext, InvokeResult } from "../../../plugin/types";
-import { cmdTransportStatus } from "../../transport";
+import type { InvokeContext, InvokeResult } from "maw-js/sdk";
+import { cmdTransportStatus } from "./impl";
 
 export const command = {
   name: ["transport", "tp"],

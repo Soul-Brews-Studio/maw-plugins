@@ -1,5 +1,5 @@
-import type { InvokeContext, InvokeResult } from "../../../plugin/types";
-import { cmdContactsLs, cmdContactsAdd, cmdContactsRm } from "../../contacts";
+import type { InvokeContext, InvokeResult } from "maw-js/sdk";
+import { cmdContactsLs, cmdContactsAdd, cmdContactsRm } from "./impl";
 
 export const command = {
   name: ["contacts", "contact"],

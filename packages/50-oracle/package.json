@@ -1,0 +1,11 @@
+{
+  "name": "@maw-plugins/oracle",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Oracle management — list, scan, fleet, about",
+  "type": "module",
+  "main": "./index.ts",
+  "peerDependencies": {
+    "maw-js": "*"
+  }
+}

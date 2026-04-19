@@ -1,10 +1,7 @@
 import { describe, it, expect, mock } from "bun:test";
-import { join } from "path";
-import type { InvokeContext } from "../../../plugin/types";
+import type { InvokeContext } from "maw-js/sdk";
 
-const root = join(import.meta.dir, "../../..");
-
-mock.module(join(root, "config"), () => ({
+mock.module("maw-js/sdk", () => ({
   loadConfig: () => ({ host: "localhost", port: 3456 }),
 }));
 
@@ -22,10 +19,12 @@ const mockAgentData = {
   total: { agents: 1, sessions: 3, tokens: 12000, cost: 0.5 },
 };
 
-(global as any).fetch = mock(async (_url: string) => ({
-  ok: true,
-  json: async () => mockAgentData,
-}));
+function mockRes(body: unknown, ok = true) {
+  const text = JSON.stringify(body);
+  return { ok, status: ok ? 200 : 500, statusText: "OK", text: async () => text };
+}
+
+(global as any).fetch = mock(async (_url: string) => mockRes(mockAgentData));
 
 const { default: handler } = await import("./index");
 
@@ -46,10 +45,9 @@ describe("costs plugin", () => {
   });
 
   it("handles empty agents gracefully", async () => {
-    (global as any).fetch = mock(async () => ({
-      ok: true,
-      json: async () => ({ agents: [], total: { agents: 0, sessions: 0, tokens: 0, cost: 0 } }),
-    }));
+    (global as any).fetch = mock(async () =>
+      mockRes({ agents: [], total: { agents: 0, sessions: 0, tokens: 0, cost: 0 } }),
+    );
     const ctx: InvokeContext = { source: "cli", args: [] };
     const result = await handler(ctx);
     expect(result.ok).toBe(true);

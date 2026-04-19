@@ -1,5 +1,5 @@
-import type { InvokeContext, InvokeResult } from "../../../plugin/types";
-import { cmdPing } from "../../ping";
+import type { InvokeContext, InvokeResult } from "maw-js/sdk";
+import { cmdPing } from "./impl";
 
 export const command = {
   name: "ping",

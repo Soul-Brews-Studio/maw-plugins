@@ -1,8 +1,7 @@
 import { describe, it, expect, mock, beforeEach } from "bun:test";
-import type { InvokeContext } from "../../../plugin/types";
+import type { InvokeContext } from "maw-js/sdk";
 
-// Mock the contacts commands
-mock.module("../../contacts", () => ({
+mock.module("./impl", () => ({
   cmdContactsLs: async () => {
     console.log("CONTACTS (2):");
     console.log("  neo           maw: neo@white");
