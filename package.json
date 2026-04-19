@@ -4,5 +4,8 @@
   "version": "0.1.0",
   "description": "maw-js plugin packages — installable CLI, API, and hook plugins",
   "workspaces": ["packages/*"],
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "test": "bash scripts/test-per-package.sh"
+  }
 }
