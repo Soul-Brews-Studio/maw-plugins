@@ -1,5 +1,5 @@
-import type { InvokeContext, InvokeResult } from "../../../plugin/types";
-import { cmdCosts } from "../../costs";
+import type { InvokeContext, InvokeResult } from "maw-js/sdk";
+import { cmdCosts } from "./impl";
 
 export const command = {
   name: "costs",
