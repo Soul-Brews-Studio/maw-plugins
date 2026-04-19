@@ -1,5 +1,5 @@
-import type { InvokeContext, InvokeResult } from "../../../plugin/types";
-import { cmdHealth } from "../../health";
+import type { InvokeContext, InvokeResult } from "maw-js/sdk";
+import { cmdHealth } from "./impl";
 
 export const command = {
   name: "health",
