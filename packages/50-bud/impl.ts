@@ -1,30 +1,9 @@
-// cmdBud in maw-js pulls in wake-target resolution, normalize-target,
-// oracle-name validation, ensureBudRepo (git/gh plumbing), bud-init
-// (vault + CLAUDE.md + fleet config), and bud-wake (tmux signal).
-// None of that surface is currently exported from maw-js/sdk. Rather
-// than copy a 600-LOC subtree into this plugin (and bloat past the
-// 200-LOC/file budget), this standalone build ships a stub that
-// errors at invoke time. The plugin still LOADS cleanly — critical
-// for `maw plugin install` not to blow up at module-resolution.
+// Thin re-export over maw-js/sdk. cmdBud is now exposed on the SDK surface
+// as of maw-js#646 (SDK expansion: bud + oracle + transport). The plugin
+// handler (./index.ts) imports cmdBud from here, keeping the layering
+// identical to other SDK-clean plugins in this repo.
 //
-// Follow-up: expose cmdBud via maw-js/sdk, then replace this file with
-// a thin re-export. Tracking: Soul-Brews-Studio/maw-js#402.
+// Closes the residual standalone-bud half of Soul-Brews-Studio/maw-js#402.
 
-export interface BudOpts {
-  from?: string;
-  repo?: string;
-  org?: string;
-  issue?: number;
-  note?: string;
-  fast?: boolean;
-  root?: boolean;
-  dryRun?: boolean;
-}
-
-export async function cmdBud(_name: string, _opts: BudOpts = {}): Promise<void> {
-  throw new Error(
-    "bud plugin is installed but cmdBud is not yet wired for standalone mode. " +
-    "Tracking: Soul-Brews-Studio/maw-js#402 (SDK export for cmdBud). " +
-    "For now, run bud from inside the maw-js monorepo.",
-  );
-}
+export { cmdBud } from "maw-js/sdk";
+export type { BudOpts } from "maw-js/sdk";
