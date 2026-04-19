@@ -1,0 +1,11 @@
+{
+  "name": "@maw-plugins/ping",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ping peer nodes to check connectivity and auth status.",
+  "type": "module",
+  "main": "./index.ts",
+  "peerDependencies": {
+    "maw-js": "*"
+  }
+}
