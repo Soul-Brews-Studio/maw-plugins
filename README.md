@@ -2,6 +2,17 @@
 
 > Installable plugins for [maw-js](https://github.com/Soul-Brews-Studio/maw-js). Each plugin is a self-contained package with one handler, all surfaces.
 
+## Setup (dev clones)
+
+```bash
+bun run setup   # creates node_modules/maw-js so `--link` installs resolve
+```
+
+Required so plugin imports like `import … from "maw-js/sdk"` resolve when a
+package is installed via `maw plugin install ./packages/<name> --link`. The
+script locates maw-js via `$MAW_JS_PATH`, sibling `../maw-js`, or the bun
+global install, and symlinks it into `./node_modules/`.
+
 ## Install a plugin
 
 ```bash
