@@ -123,7 +123,7 @@ fn config_url() -> Option<String> {
         .map(ToOwned::to_owned)
 }
 
-fn fetch(path: &str, timeout_ms: u64) -> Result<(u16, Value), String> {
+fn fetch(path: &str, timeout_ms: u64) -> Result<(u16, Value, u64), String> {
     let response = host_call(
         maw_net_fetch,
         json!({"endpoint": "avengers", "method": "GET", "path": path, "timeoutMs": timeout_ms})
@@ -150,15 +150,16 @@ fn fetch(path: &str, timeout_ms: u64) -> Result<(u16, Value), String> {
         .and_then(Value::as_str)
         .ok_or_else(|| "maw.net.fetch returned no body".to_owned())?;
     let json = serde_json::from_str(body).map_err(|error| error.to_string())?;
-    Ok((status, json))
+    let elapsed_ms = value.get("elapsedMs").and_then(Value::as_u64).unwrap_or(0);
+    Ok((status, json, elapsed_ms))
 }
 
 fn show_status(base: &str) -> Result<String, String> {
     match fetch("/all", 5_000) {
-        Ok((status, accounts)) if (200..300).contains(&status) => {
+        Ok((status, accounts, _)) if (200..300).contains(&status) => {
             Ok(render_status(base, &accounts))
         }
-        Ok((status, _)) => Err(format!(
+        Ok((status, _, _)) => Err(format!(
             "\x1b[31merror\x1b[0m: avengers unreachable at {base}: HTTP {status}"
         )),
         Err(error) => Err(format!(
@@ -169,20 +170,20 @@ fn show_status(base: &str) -> Result<String, String> {
 
 fn show_json(path: &str, timeout_ms: u64, title: &str) -> Result<String, String> {
     match fetch(path, timeout_ms) {
-        Ok((status, value)) if (200..300).contains(&status) => {
+        Ok((status, value, _)) if (200..300).contains(&status) => {
             Ok(render_json_section(title, &value))
         }
-        Ok((status, _)) => Err(format!("\x1b[31merror\x1b[0m: HTTP {status}")),
+        Ok((status, _, _)) => Err(format!("\x1b[31merror\x1b[0m: HTTP {status}")),
         Err(error) => Err(format!("\x1b[31merror\x1b[0m: {error}")),
     }
 }
 
 fn show_health(base: &str) -> String {
     match fetch("/all", 3_000) {
-        Ok((status, accounts)) if (200..300).contains(&status) => {
+        Ok((status, accounts, elapsed_ms)) if (200..300).contains(&status) => {
             let count = accounts.as_array().map_or(0, Vec::len);
             let plural = if count == 1 { "" } else { "s" };
-            format!("\n\x1b[32m●\x1b[0m  Avengers \x1b[32monline\x1b[0m  \x1b[90m0ms · {count} account{plural}\x1b[0m\n   \x1b[90m{base}\x1b[0m\n\n")
+            format!("\n\x1b[32m●\x1b[0m  Avengers \x1b[32monline\x1b[0m  \x1b[90m{elapsed_ms}ms · {count} account{plural}\x1b[0m\n   \x1b[90m{base}\x1b[0m\n\n")
         }
         _ => format!("\n\x1b[31m●\x1b[0m  Avengers \x1b[31moffline\x1b[0m  \x1b[90m0ms\x1b[0m\n   \x1b[90m{base}\x1b[0m\n\n"),
     }
