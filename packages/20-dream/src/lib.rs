@@ -96,9 +96,6 @@ fn host_write(path: &Path, content: &str) -> Result<(), String> {
 struct Context {
     args: Vec<String>,
     cwd: Option<String>,
-    repos_root: Option<String>,
-    dream_date: Option<String>,
-    dream_epoch: Option<i64>,
 }
 thread_local! { static CONTEXT: RefCell<Context> = RefCell::new(Context::default()); }
 fn context() -> Context {
@@ -110,9 +107,7 @@ fn dream_cwd() -> PathBuf {
         .map_or_else(|| host_path("cwd"), PathBuf::from)
 }
 fn dream_repos_root() -> PathBuf {
-    context()
-        .repos_root
-        .map_or_else(|| host_path("repos"), PathBuf::from)
+    host_path("repos")
 }
 
 #[plugin_fn]
@@ -940,12 +935,34 @@ fn dream_latest_file(dir: &std::path::Path, _max_days_old: i64) -> Option<String
 fn dream_today(opts: &DreamOptions) -> String {
     opts.date
         .clone()
-        .or_else(|| context().dream_date)
         .unwrap_or_else(|| dream_date_from_days(dream_now_days(opts)))
 }
 
-fn dream_now_days(_opts: &DreamOptions) -> i64 {
-    context().dream_epoch.unwrap_or(0) / 86_400
+fn dream_now_days(opts: &DreamOptions) -> i64 {
+    opts.date
+        .as_deref()
+        .and_then(dream_days_from_date)
+        .unwrap_or_else(|| {
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_or(0, |duration| {
+                    i64::try_from(duration.as_secs()).unwrap_or(i64::MAX) / 86_400
+                })
+        })
+}
+
+fn dream_days_from_date(date: &str) -> Option<i64> {
+    let mut parts = date.split('-').map(|part| part.parse::<i64>().ok());
+    let (year, month, day) = (parts.next()??, parts.next()??, parts.next()??);
+    if parts.next().is_some() || !(1..=12).contains(&month) || !(1..=31).contains(&day) {
+        return None;
+    }
+    let year = year - i64::from(month <= 2);
+    let era = if year >= 0 { year } else { year - 399 } / 400;
+    let yoe = year - era * 400;
+    let shifted_month = month + if month > 2 { -3 } else { 9 };
+    let doy = (153 * shifted_month + 2) / 5 + day - 1;
+    Some(era * 146_097 + yoe * 365 + yoe / 4 - yoe / 100 + doy - 719_468)
 }
 
 fn dream_date_from_days(days: i64) -> String {
