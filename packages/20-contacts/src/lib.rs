@@ -9,19 +9,18 @@ use std::fmt::Write as _;
 extern "C" {
     #[link_name = "maw.paths.get"]
     fn maw_paths_get(input: u64) -> u64;
+    #[link_name = "maw.time.now"]
+    fn maw_time_now(input: u64) -> u64;
     #[link_name = "maw.fs.read"]
     fn maw_fs_read(input: u64) -> u64;
     #[link_name = "maw.fs.write"]
     fn maw_fs_write(input: u64) -> u64;
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Default, Deserialize)]
 struct Context {
     #[serde(default)]
     args: Vec<String>,
-    #[serde(default)]
-    now_millis: u64,
 }
 
 fn host_call(function: unsafe extern "C" fn(u64) -> u64, input: String) -> String {
@@ -40,26 +39,23 @@ fn host_call(function: unsafe extern "C" fn(u64) -> u64, input: String) -> Strin
 
 #[plugin_fn]
 pub unsafe fn handle(input: String) -> FnResult<String> {
-    let context: Context = serde_json::from_str(&input).unwrap_or(Context {
-        args: Vec::new(),
-        now_millis: 0,
-    });
-    Ok(match run(&context.args, context.now_millis) {
+    let context: Context = serde_json::from_str(&input).unwrap_or_default();
+    Ok(match run(&context.args) {
         Ok(output) => json!({"ok": true, "output": output}).to_string(),
         Err(error) => json!({"ok": false, "error": error}).to_string(),
     })
 }
 
-fn run(args: &[String], now_millis: u64) -> Result<String, String> {
+fn run(args: &[String]) -> Result<String, String> {
     match args
         .first()
         .map(|value| value.to_ascii_lowercase())
         .as_deref()
     {
-        Some("add") if args.get(1).is_some() => add(&args[1], &args[2..], now_millis),
+        Some("add") if args.get(1).is_some() => add(&args[1], &args[2..], now_millis()?),
         Some("rm" | "remove") => args.get(1).map_or_else(
             || Err("usage: maw contacts rm <name>".to_owned()),
-            |name| remove(name, now_millis),
+            |name| remove(name, now_millis()?),
         ),
         _ => list(),
     }
@@ -280,6 +276,18 @@ fn iso8601(millis: u64) -> String {
         "{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}.{:03}Z",
         millis % 1_000
     )
+}
+
+fn now_millis() -> Result<u64, String> {
+    let response = host_call(maw_time_now, "{}".to_owned());
+    let envelope: Value = serde_json::from_str(&response)
+        .map_err(|_| "contacts: failed to read host clock".to_owned())?;
+    envelope
+        .get("value")
+        .unwrap_or(&envelope)
+        .get("millis")
+        .and_then(Value::as_u64)
+        .ok_or_else(|| "contacts: failed to read host clock".to_owned())
 }
 
 #[cfg(test)]
