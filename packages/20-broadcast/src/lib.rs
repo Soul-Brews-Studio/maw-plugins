@@ -1,5 +1,8 @@
 #![allow(clippy::missing_panics_doc)]
+mod predicate;
+
 use extism_pdk::*;
+use predicate::is_agent;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, BTreeSet};
@@ -263,12 +266,6 @@ fn validate_target(target: &str) -> Result<(), String> {
 }
 fn skip_session(name: &str) -> bool {
     name == "99-overview" || name == "scratch" || name.ends_with("-view")
-}
-fn is_agent(command: &str) -> bool {
-    let c = command.to_ascii_lowercase();
-    ["claude", "codex", "node", "thclaws"]
-        .iter()
-        .any(|v| c.contains(v))
 }
 fn scope_description(scope: &Scope) -> String {
     let mut p = Vec::new();
