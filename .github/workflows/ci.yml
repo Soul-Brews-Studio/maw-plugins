@@ -33,17 +33,11 @@ jobs:
             echo "::endgroup::"
           done
 
-      - name: Run tests where present
-        run: |
-          set -euo pipefail
-          for dir in packages/*/; do
-            [ -f "$dir/Cargo.toml" ] || continue
-            if [ -d "$dir/tests" ] || grep -rq '#\[cfg(test)\]' "$dir/src"; then
-              echo "::group::test $dir"
-              cargo test --manifest-path "$dir/Cargo.toml"
-              echo "::endgroup::"
-            fi
-          done
+      # No host-target `cargo test` here: these are extism GUEST crates — their
+      # imports (load_u8/store_u64/alloc/…) exist only inside the extism runtime,
+      # so a native test binary can never link (proven by 20-mega on this repo's
+      # first CI run). Behavior is tested host-side by maw-rs's parity/invoke
+      # harness against the committed, sha256-pinned plugin.wasm.
 
       - name: Pin integrity — committed plugin.wasm vs manifest sha256
         # Verifies the COMMITTED artifact matches its manifest pin.
