@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install wasm target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            packages/*/target
+          key: cargo-${{ runner.os }}-${{ hashFiles('packages/*/Cargo.lock') }}
+
+      - name: Build all wasm packages
+        run: |
+          set -euo pipefail
+          for dir in packages/*/; do
+            [ -f "$dir/Cargo.toml" ] || continue
+            echo "::group::build $dir"
+            cargo build --release --target wasm32-unknown-unknown --manifest-path "$dir/Cargo.toml"
+            echo "::endgroup::"
+          done
+
+      - name: Run tests where present
+        run: |
+          set -euo pipefail
+          for dir in packages/*/; do
+            [ -f "$dir/Cargo.toml" ] || continue
+            if [ -d "$dir/tests" ] || grep -rq '#\[cfg(test)\]' "$dir/src"; then
+              echo "::group::test $dir"
+              cargo test --manifest-path "$dir/Cargo.toml"
+              echo "::endgroup::"
+            fi
+          done
+
+      - name: Pin integrity — committed plugin.wasm vs manifest sha256
+        # Verifies the COMMITTED artifact matches its manifest pin.
+        # Deliberately does NOT compare a rebuilt wasm against the pin:
+        # rebuild determinism is unproven (maw-rs determinism test is #[ignore]d).
+        run: |
+          set -euo pipefail
+          fail=0
+          for dir in packages/*/; do
+            [ -f "$dir/plugin.wasm" ] || continue
+            [ -f "$dir/plugin.json" ] || { echo "FAIL $dir: plugin.wasm without plugin.json"; fail=1; continue; }
+            pin=$(jq -r '.artifact.sha256 // empty' "$dir/plugin.json" | sed 's/^sha256://')
+            if [ -z "$pin" ]; then
+              echo "FAIL $dir: manifest missing artifact.sha256"
+              fail=1
+              continue
+            fi
+            actual=$(sha256sum "$dir/plugin.wasm" | cut -d' ' -f1)
+            if [ "$pin" = "$actual" ]; then
+              echo "OK   $dir ($actual)"
+            else
+              echo "FAIL $dir: pin $pin != actual $actual"
+              fail=1
+            fi
+          done
+          exit $fail
