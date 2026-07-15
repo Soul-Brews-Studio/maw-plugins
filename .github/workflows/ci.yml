@@ -50,6 +50,11 @@ jobs:
             [ -f "$dir/plugin.wasm" ] || continue
             [ -f "$dir/plugin.json" ] || { echo "FAIL $dir: plugin.wasm without plugin.json"; fail=1; continue; }
             pin=$(jq -r '.artifact.sha256 // empty' "$dir/plugin.json" | sed 's/^sha256://')
+            # A dev-tier-active fleet plugin keeps plugin.json on bun-dev and
+            # pins its pre-staged wasm in plugin.source.json instead.
+            if [ -z "$pin" ] && [ -f "$dir/plugin.source.json" ]; then
+              pin=$(jq -r '.artifact.sha256 // empty' "$dir/plugin.source.json" | sed 's/^sha256://')
+            fi
             if [ -z "$pin" ]; then
               echo "FAIL $dir: manifest missing artifact.sha256"
               fail=1
@@ -64,3 +69,82 @@ jobs:
             fi
           done
           exit $fail
+
+  # Bun tests for the fleet plugins imported from maw-rs fleet-plugins/
+  # (repo split phase 1). Ported from maw-rs .github/workflows/ci.yml
+  # "Fleet-plugin bun tests".
+  fleet-bun-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Fleet-plugin bun tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          found=0
+          for pkg in packages/*; do
+            [ -d "$pkg" ] || continue
+
+            shopt -s nullglob
+            tests=("$pkg"/src/*.test.ts)
+            shopt -u nullglob
+            if [ "${#tests[@]}" -eq 0 ]; then
+              continue
+            fi
+
+            if [ -f "$pkg/package.json" ]; then
+              echo "::group::bun install $(basename "$pkg")"
+              # Best-effort: resolving inside the workspace also resolves the
+              # legacy packages' unpublished maw-js dep (linked by
+              # scripts/setup.sh in dev) and 404s; the fleet plugins' tests do
+              # not need it, so warn and keep going.
+              (cd "$pkg" && bun install) \
+                || echo "warn: bun install failed in $pkg (unpublished workspace dep); running tests anyway"
+              echo "::endgroup::"
+            fi
+
+            found=1
+            rel_tests=()
+            for test in "${tests[@]}"; do
+              rel_tests+=("./${test#$pkg/}")
+            done
+
+            echo "::group::bun test $(basename "$pkg")"
+            (cd "$pkg" && bun test "${rel_tests[@]}")
+            echo "::endgroup::"
+          done
+
+          if [ "$found" -eq 0 ]; then
+            echo "No fleet-plugin bun tests found; skipping"
+          fi
+
+  # Native Swift helper pin + slices for packages/maw-menubar. Ported from
+  # maw-rs .github/workflows/ci.yml "maw-menubar-native".
+  maw-menubar-native:
+    name: maw-menubar universal helper
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify committed helper pin and architecture slices
+        working-directory: packages/maw-menubar
+        run: |
+          set -euo pipefail
+          expected=$(jq -r '.bundledArtifacts[] | select(.path == "bin/maw-menubar") | .sha256' plugin.json)
+          actual="sha256:$(shasum -a 256 bin/maw-menubar | awk '{print $1}')"
+          [[ "$actual" == "$expected" ]]
+          archs=$(/usr/bin/lipo -archs bin/maw-menubar)
+          [[ " $archs " == *" arm64 "* ]]
+          [[ " $archs " == *" x86_64 "* ]]
+          /usr/bin/codesign --verify --strict bin/maw-menubar
+
+      - name: Rebuild universal Swift helper
+        working-directory: packages/maw-menubar
+        run: ./scripts/build-universal.sh

@@ -23,6 +23,28 @@ packages/
 
 Number prefix = weight = execution order (lower fires first).
 
+## Fleet plugins (imported from maw-rs `fleet-plugins/`)
+
+The shipped fleet plugins were extracted out of
+[maw-rs](https://github.com/Soul-Brews-Studio/maw-rs) (repo split phase 1,
+2026-07-15) and live here under their **bare, unprefixed names** — maw-rs's
+baked install hints (`KNOWN_FLEET_PLUGIN_VERBS`) reference
+`Soul-Brews-Studio/maw-plugins/packages/<dir>` verbatim, so these dirs must
+not be renamed:
+
+- `packages/atlas`, `packages/hermes`, `packages/squad`, `packages/team`,
+  `packages/cross-team-queue` — ship-tier WASM (AssemblyScript source in
+  `src/plugin.ts`, committed `plugin.wasm` pinned by `artifact.sha256` in
+  `plugin.json`, rebuild manifest in `plugin.source.json`).
+- `packages/share`, `packages/p2p-share` — `bun-dev` tier (TypeScript entry,
+  no WASM artifact).
+- `packages/maw-menubar` — `bun-dev` + native Swift helper (committed
+  universal `bin/maw-menubar`, pinned via `bundledArtifacts` in
+  `plugin.json`).
+
+The full dev-Bun → ship-WASM ladder and pin lifecycle reference is
+[`docs/fleet-plugins.md`](./docs/fleet-plugins.md).
+
 ## Manifest (`plugin.json`)
 
 ```json
@@ -95,9 +117,14 @@ maw plugin install Soul-Brews-Studio/maw-plugins/packages/NN-verb --sha256 <pin>
 
 Every push/PR builds each `packages/*/` crate for `wasm32-unknown-unknown`,
 runs its tests where present, and verifies **pin integrity**: the sha256 of
-the committed `plugin.wasm` must equal the manifest's `artifact.sha256`.
-(Rebuilt wasm is NOT compared against the pin — build determinism is
-unproven.)
+the committed `plugin.wasm` must equal the manifest's `artifact.sha256`
+(taken from `plugin.json`, falling back to `plugin.source.json` for
+dev-tier-active fleet plugins). (Rebuilt wasm is NOT compared against the
+pin — build determinism is unproven.)
+
+Fleet plugins additionally get their bun tests run (`packages/*/src/*.test.ts`)
+and, for `maw-menubar`, a macOS job that verifies the committed universal
+helper's sha256 pin, arm64+x86_64 slices, and codesignature, then rebuilds it.
 
 ## License
 
