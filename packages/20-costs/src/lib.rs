@@ -313,7 +313,9 @@ fn estimate(u: &Usage) -> f64 {
         "haiku" => (0.25, 1.25),
         _ => (3.0, 15.0),
     };
-    ((u.input + u.cache_read + u.cache_create) as f64 / 1_000_000.0) * ir
+    (u.input as f64 / 1_000_000.0) * ir
+        + (u.cache_create as f64 / 1_000_000.0) * (1.25 * ir)
+        + (u.cache_read as f64 / 1_000_000.0) * (0.1 * ir)
         + (u.output as f64 / 1_000_000.0) * or
 }
 fn tier(m: &str) -> &'static str {
@@ -388,6 +390,7 @@ fn render_summary(a: &[Agent]) -> String {
         pad_s(&format!("${cost:.2}"), 12),
         pad_s(&sess.to_string(), 10)
     ));
+    o.push_str("  \x1b[90mest. API-equivalent pricing; cache reads at 0.1x, cache writes at 1.25x of input\x1b[0m\n\n");
     o
 }
 fn render_daily(a: &[Agent], days: usize, json_out: bool, today: Option<&str>) -> String {
