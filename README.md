@@ -126,6 +126,10 @@ Fleet plugins additionally get their bun tests run (`packages/*/src/*.test.ts`)
 and, for `maw-menubar`, a macOS job that verifies the committed universal
 helper's sha256 pin, arm64+x86_64 slices, and codesignature, then rebuilds it.
 
+CI also enforces that [`registry.json`](./registry.json) — the default mawx
+resolution root — stays in sync with the packages it pins
+(`bun run registry:check`). See [docs/registry.md](./docs/registry.md).
+
 ## License
 
 [BUSL-1.1](./LICENSE) — Business Source License 1.1, converting to Apache-2.0
