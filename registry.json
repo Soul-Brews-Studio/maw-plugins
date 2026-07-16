@@ -88,8 +88,8 @@
     ]
   },
   "dream": {
-    "commit": "145411e0b674a65a1e6ab251462f6ceae1e8bbba",
-    "sha256": "sha256:5de4f4f819d2de66435757232e838ea3b1396f2c53ee195d7471826a1131aff6",
+    "commit": "0e97326e05b26a8f688ec598430222fa0810003d",
+    "sha256": "sha256:fff8a2d94dcfddb40329d9297783043a19124c5e1d2a78e81b8285c4ce86694e",
     "path": "packages/20-dream",
     "version": "1.0.0",
     "capabilities": [

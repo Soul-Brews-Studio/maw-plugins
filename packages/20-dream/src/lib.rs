@@ -9,6 +9,8 @@ use std::path::{Path, PathBuf};
 extern "C" {
     #[link_name = "maw.paths.get"]
     fn maw_paths_get(input: u64) -> u64;
+    #[link_name = "maw.time.now"]
+    fn maw_time_now(input: u64) -> u64;
     #[link_name = "maw.fs.list"]
     fn maw_fs_list(input: u64) -> u64;
     #[link_name = "maw.fs.stat"]
@@ -188,7 +190,8 @@ fn dream_run(argv: &[String]) -> Result<String, String> {
     if opts.speculate {
         return dream_speculate_existing(&opts);
     }
-    let mut repos = dream_scan_repo_states(&opts);
+    let now_days = dream_resolve_now_days(&opts)?;
+    let mut repos = dream_scan_repo_states(now_days);
     dream_filter_repos(&mut repos, &opts);
     let mut items = dream_classify_repos(&repos, &opts);
     dream_sort_items(&mut items);
@@ -196,7 +199,7 @@ fn dream_run(argv: &[String]) -> Result<String, String> {
         items.truncate(opts.limit);
     }
     let insights = dream_generate_insights(&items, &repos);
-    let date = dream_today(&opts);
+    let date = dream_today(&opts, now_days);
     let saved = if opts.porcelain {
         None
     } else {
@@ -311,10 +314,9 @@ fn dream_parse_limit(value: &str) -> Result<usize, String> {
     Ok(n)
 }
 
-fn dream_scan_repo_states(opts: &DreamOptions) -> Vec<DreamRepo> {
+fn dream_scan_repo_states(now_days: i64) -> Vec<DreamRepo> {
     let mut paths = Vec::new();
     dream_add_ghq_repo_paths(&mut paths);
-    let now_days = dream_now_days(opts);
     let mut repos = Vec::new();
     for path in paths {
         if !host_is_dir(&path) || !dream_safe_path(&path) {
@@ -932,23 +934,29 @@ fn dream_latest_file(dir: &std::path::Path, _max_days_old: i64) -> Option<String
     files.pop().map(|path| path.display().to_string())
 }
 
-fn dream_today(opts: &DreamOptions) -> String {
+fn dream_today(opts: &DreamOptions, now_days: i64) -> String {
     opts.date
         .clone()
-        .unwrap_or_else(|| dream_date_from_days(dream_now_days(opts)))
+        .unwrap_or_else(|| dream_date_from_days(now_days))
 }
 
-fn dream_now_days(opts: &DreamOptions) -> i64 {
-    opts.date
-        .as_deref()
-        .and_then(dream_days_from_date)
-        .unwrap_or_else(|| {
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map_or(0, |duration| {
-                    i64::try_from(duration.as_secs()).unwrap_or(i64::MAX) / 86_400
-                })
-        })
+// Resolve "today" in whole days since the Unix epoch. An explicit `--date`
+// wins; otherwise the wall clock comes from the host via `maw.time.now`
+// (the extism sandbox has no `SystemTime::now`, which aborts). If the host
+// exposes no clock we surface an error instead of aborting.
+fn dream_resolve_now_days(opts: &DreamOptions) -> Result<i64, String> {
+    if let Some(days) = opts.date.as_deref().and_then(dream_days_from_date) {
+        return Ok(days);
+    }
+    host_now_days().ok_or_else(|| {
+        "dream: host clock unavailable (maw.time.now); pass --date YYYY-MM-DD".to_owned()
+    })
+}
+
+fn host_now_days() -> Option<i64> {
+    let v = host_call(maw_time_now, "{}".to_owned());
+    let millis = value(&v).get("millis").and_then(Value::as_u64)?;
+    i64::try_from(millis / 1000 / 86_400).ok()
 }
 
 fn dream_days_from_date(date: &str) -> Option<i64> {
