@@ -1,0 +1,250 @@
+{
+  "artifact-manager": {
+    "commit": "abf2272d47e98962d252f092172d436db8fb5631",
+    "sha256": "sha256:c8207773d4064cc8409df3aed26551802dd86d47a4a1c851261f1e161c76f11d",
+    "path": "packages/50-artifact-manager",
+    "version": "1.0.0",
+    "capabilities": [
+      "fs:read:maw-cache",
+      "fs:write:maw-cache",
+      "fs:read:maw-legacy",
+      "fs:write:maw-legacy",
+      "proc:exec:base64",
+      "proc:exec:date"
+    ]
+  },
+  "atlas": {
+    "commit": "cd173a648d0172089bd504d77207ea1c0d90e68f",
+    "sha256": "sha256:8bce593d9727d5fcbb74ef7eecf06798b82e1208031b6d7d44a9c6463c7e2310",
+    "path": "packages/atlas",
+    "version": "1.0.0",
+    "capabilities": [
+      "net:fetch:discord-rest",
+      "secret:use:atlas-bot-token"
+    ]
+  },
+  "avengers": {
+    "commit": "33dd5046893def172524d655490548b0147d562f",
+    "sha256": "sha256:87769fdfdc90a0e674024f69198e10ebd57470323ad9ca0ba25729256f0472d5",
+    "path": "packages/20-avengers",
+    "version": "1.0.0",
+    "capabilities": [
+      "sdk:config:read",
+      "net:fetch:avengers"
+    ]
+  },
+  "broadcast": {
+    "commit": "9478d3ea192cedbf5719502389a89c971db964d5",
+    "sha256": "sha256:07a1af2f1a948df0caa1cc0580f196e8d37d1d4dd310f001c35f5757004c223f",
+    "path": "packages/20-broadcast",
+    "version": "1.1.0",
+    "capabilities": [
+      "tmux:read",
+      "tmux:send",
+      "fs:read:teams",
+      "fs:read:cwd",
+      "fs:read:fleet-config",
+      "fs:read:fleet-legacy",
+      "fs:read:fleet-state"
+    ]
+  },
+  "contacts": {
+    "commit": "ea6a3ffa00d58870c60e7d193e92d90d4504156c",
+    "sha256": "sha256:2d1ffdf7c7fa053cb4e51d1c3d7db3b9b01f4339c9eab76f167d60414fa7cb11",
+    "path": "packages/20-contacts",
+    "version": "1.0.0",
+    "capabilities": [
+      "fs:read:psi",
+      "fs:write:psi"
+    ]
+  },
+  "costs": {
+    "commit": "4c34f2a99e0cc4c1dd8ccabf1a0dff25a3fde69f",
+    "sha256": "sha256:d6fecca891f8cbb4208dcc2469be763e41013957044041adfc15423f753f553f",
+    "path": "packages/20-costs",
+    "version": "1.0.0",
+    "capabilities": [
+      "fs:read:claude-projects"
+    ]
+  },
+  "cross-team-queue": {
+    "commit": "cd173a648d0172089bd504d77207ea1c0d90e68f",
+    "sha256": "sha256:5f8fd46790d85bd9e8f13a99b255cee6412a8aca676b75ee5ad4b0ac5c0a84a9",
+    "path": "packages/cross-team-queue",
+    "version": "0.1.0",
+    "capabilities": [
+      "fs:read:vault"
+    ]
+  },
+  "demo": {
+    "commit": "d628036b923a6c67520e8a1b6e830ad030e4b3f4",
+    "sha256": "sha256:e119c93feaa997c6b09c0f0efda023321694ce0da7747ebbe027991ed9cff86f",
+    "path": "packages/20-demo",
+    "version": "1.0.0",
+    "capabilities": [
+      "tmux:read",
+      "tmux:raw:kill-pane",
+      "tmux:raw:split-window"
+    ]
+  },
+  "dream": {
+    "commit": "145411e0b674a65a1e6ab251462f6ceae1e8bbba",
+    "sha256": "sha256:5de4f4f819d2de66435757232e838ea3b1396f2c53ee195d7471826a1131aff6",
+    "path": "packages/20-dream",
+    "version": "1.0.0",
+    "capabilities": [
+      "fs:read:repos",
+      "fs:read:cwd",
+      "fs:write:cwd",
+      "proc:exec:git"
+    ]
+  },
+  "follow": {
+    "commit": "80e3b087220f5ffeb0809b6df063b70e62c6e42a",
+    "sha256": "sha256:e4185f6f2ff565754e4491f3d4fc01a03c3279522b96ac0dc60b643c7c2da704",
+    "path": "packages/20-follow",
+    "version": "1.0.0",
+    "capabilities": [
+      "tmux:read"
+    ]
+  },
+  "hermes": {
+    "commit": "cd173a648d0172089bd504d77207ea1c0d90e68f",
+    "sha256": "sha256:c77f5c04ffbf8dc494586a1c8bb321f25e90ad4a9689c3e2b36e2ffcf0135de8",
+    "path": "packages/hermes",
+    "version": "0.2.1",
+    "capabilities": [
+      "net:fetch:discord-rest",
+      "secret:use:discord-bot-token"
+    ]
+  },
+  "hub": {
+    "commit": "a9696c94146df6802d63d7c5dd0503d1cdb30d2b",
+    "sha256": "sha256:9ffb3a76778ccbde19a3fd67372907a74c0f691300f512602affd431c7d9afe6",
+    "path": "packages/20-hub",
+    "version": "1.0.0",
+    "capabilities": [
+      "fs:read:config",
+      "fs:write:config"
+    ]
+  },
+  "incubate": {
+    "commit": "f490b458596117e8e78b8c5eeccdd5b4663aa133",
+    "sha256": "sha256:7f66d969049bf2ca6e8321e396e81841a9c34b7149c30fc1c6b92b4c201fc0ae",
+    "path": "packages/50-incubate",
+    "version": "1.0.0",
+    "capabilities": [
+      "cli:run:bud",
+      "tmux:read",
+      "tmux:send"
+    ]
+  },
+  "layout": {
+    "commit": "4237ff58b497b396d4af80d895ee67a28170948f",
+    "sha256": "sha256:8d6e4645ef71309dd94df3ef1c0926d39f4c536e39b1642a6b55cbb9cff80250",
+    "path": "packages/20-layout",
+    "version": "1.0.0",
+    "capabilities": [
+      "tmux:raw:select-layout"
+    ]
+  },
+  "mega": {
+    "commit": "9af923206d05d5a3fc3f34623b7bb845a0b169d3",
+    "sha256": "sha256:31d4cda0d09d8dfae0ae08849a56f549f82bce4d5227a39e4a7886005ec78cb0",
+    "path": "packages/20-mega",
+    "version": "1.0.0",
+    "capabilities": [
+      "fs:read:fleet-config",
+      "fs:read:fleet-legacy",
+      "fs:read:fleet-state",
+      "tmux:raw:kill-session",
+      "tmux:read"
+    ]
+  },
+  "pulse": {
+    "commit": "2693a2a2e25f7406ed3b088b6dece1370a044b93",
+    "sha256": "sha256:1f20c2247b8a802c85460fae3ddc6a0bec2fdcdda51c9171f6f7aa7219698bcf",
+    "path": "packages/20-pulse",
+    "version": "1.0.0",
+    "capabilities": [
+      "exec:home",
+      "fs:read:repos",
+      "proc:exec:date",
+      "proc:exec:gh",
+      "proc:exec:git",
+      "proc:exec:maw",
+      "tmux:read"
+    ]
+  },
+  "soul-sync": {
+    "commit": "375ce6a16b8335a1e58addf42259c1852f36caeb",
+    "sha256": "sha256:48ac5fdb5fe448369873fa8ff68bcfd2cdacc29f151617b3ebe16b0a7cedc92a",
+    "path": "packages/20-soul-sync",
+    "version": "1.0.0",
+    "capabilities": [
+      "fs:read:fleet-config",
+      "fs:read:fleet-legacy",
+      "fs:read:fleet-state",
+      "fs:read:repos",
+      "fs:write:repos",
+      "proc:exec:date",
+      "proc:exec:git"
+    ]
+  },
+  "squad": {
+    "commit": "cd173a648d0172089bd504d77207ea1c0d90e68f",
+    "sha256": "sha256:e756b39fef9fb314c5412b296c3a9ddae97ec080932e71a29c7d2272ff319d6c",
+    "path": "packages/squad",
+    "version": "0.1.0",
+    "capabilities": [
+      "fs:read:teams",
+      "fs:write:teams",
+      "tmux:read",
+      "tmux:send",
+      "proc:exec:date"
+    ]
+  },
+  "stream": {
+    "commit": "7f45689659071c2ae75c18b56352462234a05173",
+    "sha256": "sha256:e323e52db8fa0445120973d24d0e88346cc5c2d80f38d507b5f502632cece7a4",
+    "path": "packages/20-stream",
+    "version": "1.0.0",
+    "capabilities": [
+      "tmux:read",
+      "tmux:raw:new-session",
+      "tmux:raw:link-window",
+      "tmux:raw:rename-window",
+      "tmux:raw:set-window-option",
+      "tmux:raw:kill-window",
+      "tmux:raw:unlink-window"
+    ]
+  },
+  "team": {
+    "commit": "cd173a648d0172089bd504d77207ea1c0d90e68f",
+    "sha256": "sha256:d59bc8107c040e65c263e48267b22c07ea530ad4af9e55cb573de8f9e80fbd7f",
+    "path": "packages/team",
+    "version": "2.0.1",
+    "capabilities": [
+      "fs:read:teams",
+      "fs:read:vault",
+      "tmux:read"
+    ]
+  },
+  "tile": {
+    "commit": "b16a13776cb59ce0d8af1af4dbeb8ff59a3d1066",
+    "sha256": "sha256:c9246ee8867bc73b3e75f2e153eed5e0944218dd62a28c9483b7c933d86b685a",
+    "path": "packages/20-tile",
+    "version": "1.0.0",
+    "capabilities": [
+      "tmux:read",
+      "tmux:raw:list-panes",
+      "tmux:raw:split-window",
+      "tmux:raw:select-pane",
+      "tmux:raw:set-option",
+      "tmux:raw:send-keys",
+      "tmux:raw:select-layout",
+      "tmux:raw:swap-pane",
+      "tmux:raw:kill-pane"
+    ]
+  }
+}

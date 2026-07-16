@@ -7,6 +7,8 @@
   "license": "BUSL-1.1",
   "scripts": {
     "setup": "bash scripts/setup.sh",
-    "test": "bash scripts/test-per-package.sh"
+    "test": "bash scripts/test-per-package.sh",
+    "registry": "bun run scripts/gen-registry.ts",
+    "registry:check": "bun run scripts/gen-registry.ts --check"
   }
 }

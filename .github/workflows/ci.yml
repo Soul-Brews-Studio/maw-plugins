@@ -70,6 +70,28 @@ jobs:
           done
           exit $fail
 
+  # registry.json freshness (mawx WI-9). registry.json is the default mawx
+  # AUTO-TRUST resolution root: a pinned entry here runs on a client with no
+  # first-run prompt, so it must never drift from the pins the pin-integrity
+  # gate above verifies. This job regenerates it from packages/* and fails if
+  # the committed file differs. fetch-depth: 0 because the generator anchors
+  # each entry to the last commit that touched its package dir (see the script
+  # header) — that needs full history, not a shallow checkout.
+  registry-freshness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: registry.json is fresh vs packages/*
+        run: bun run scripts/gen-registry.ts --check
+
   # Bun tests for the fleet plugins imported from maw-rs fleet-plugins/
   # (repo split phase 1). Ported from maw-rs .github/workflows/ci.yml
   # "Fleet-plugin bun tests".
