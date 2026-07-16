@@ -1,7 +1,7 @@
 {
   "artifact": {
     "path": "./plugin.wasm",
-    "sha256": "sha256:d6fecca891f8cbb4208dcc2469be763e41013957044041adfc15423f753f553f"
+    "sha256": "sha256:1947d3ed3f1a1bc5b192d918c6cc02eddd46196cf4b3455b2cbfabd51f1d2f58"
   },
   "author": "Soul-Brews-Studio",
   "capabilities": [
