@@ -1,32 +1,35 @@
 #![allow(clippy::missing_panics_doc)]
 use base64::Engine as _;
 use extism_pdk::*;
-use serde::Deserialize;
+use maw_plugin_pdk::{encode_result, host_call, parse_context, HostSuccess, InvokeResult};
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 
-#[link(wasm_import_module = "extism:host/user")]
-extern "C" {
-    #[link_name = "maw.paths.get"]
-    fn maw_paths_get(input: u64) -> u64;
-    #[link_name = "maw.fs.list"]
-    fn maw_fs_list(input: u64) -> u64;
-    #[link_name = "maw.fs.read"]
-    fn maw_fs_read(input: u64) -> u64;
+#[derive(Deserialize)]
+struct PathResult {
+    path: String,
 }
-
-fn host_call(f: unsafe extern "C" fn(u64) -> u64, input: String) -> String {
-    let Ok(mem) = Memory::from_bytes(input.as_bytes()) else {
-        return String::new();
-    };
-    let offset = mem.offset();
-    let out = unsafe { f(offset) };
-    mem.free();
-    Memory::find(out).map_or_else(String::new, |m| {
-        let bytes = m.to_vec();
-        m.free();
-        String::from_utf8_lossy(&bytes).into_owned()
-    })
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ListResult {
+    entries: Vec<ListEntry>,
+    next_offset: Option<u64>,
+}
+#[derive(Deserialize)]
+struct ListEntry {
+    path: String,
+    kind: String,
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ReadResult {
+    content: String,
+    next_offset: Option<u64>,
+}
+#[derive(Deserialize)]
+struct NowResult {
+    millis: u64,
 }
 
 #[derive(Default, Clone)]
@@ -50,40 +53,29 @@ struct Agent {
     daily: Vec<f64>,
     had: Vec<bool>,
 }
-#[derive(Deserialize)]
-struct Ctx {
-    args: Vec<String>,
-    today: Option<String>,
-    home: Option<String>,
-}
-
 #[plugin_fn]
 pub unsafe fn handle(input: String) -> FnResult<String> {
-    let ctx: Ctx = serde_json::from_str(&input).unwrap_or(Ctx {
-        args: Vec::new(),
-        today: None,
-        home: None,
-    });
-    let (daily, days, as_json) = match parse_args(&ctx.args) {
-        Ok(v) => v,
-        Err(e) => return Ok(result(false, "", &e)),
+    let ctx = match parse_context(&input) {
+        Ok(ctx) => ctx,
+        Err(error) => return Ok(wire(InvokeResult::error(error.to_string()))),
     };
-    let projects = projects_dir(ctx.home.as_deref());
-    let agents = collect(&projects, daily, days, ctx.today.as_deref());
-    let out = if daily {
-        render_daily(&agents, days, as_json, ctx.today.as_deref())
+    let (daily, days, as_json) = match parse_args(&ctx.args) {
+        Ok(value) => value,
+        Err(error) => return Ok(wire(InvokeResult::error(error))),
+    };
+    let today = daily.then(current_day).flatten();
+    let agents = collect(&projects_dir(), daily, days, today.as_deref());
+    let output = if daily {
+        render_daily(&agents, days, as_json, today.as_deref())
     } else {
         render_summary(&agents)
     };
-    Ok(result(true, &out, ""))
+    Ok(wire(InvokeResult::output(output)))
 }
 
-fn result(ok: bool, output: &str, error: &str) -> String {
-    if ok {
-        json!({"ok":true,"output":output}).to_string()
-    } else {
-        json!({"ok":false,"error":error}).to_string()
-    }
+fn wire(result: InvokeResult) -> String {
+    encode_result(&result)
+        .unwrap_or_else(|error| json!({"ok":false,"error":error.to_string()}).to_string())
 }
 fn usage() -> &'static str {
     "usage: maw-rs costs [--daily [N]|--days N] [--json]"
@@ -128,24 +120,15 @@ fn parse_days(s: &str) -> Result<usize, String> {
     }
 }
 
-fn projects_dir(home: Option<&str>) -> String {
-    let r = host_call(maw_paths_get, json!({"name":"claude-projects"}).to_string());
-    if ok(&r) {
-        if let Some(p) = field(&r, "path") {
-            return p;
-        }
-    }
-    home.map_or(".".to_owned(), |h| format!("{h}/.claude/projects"))
+fn projects_dir() -> String {
+    let response: Result<HostSuccess<PathResult>, _> =
+        host_call!(paths_get, json!({"name":"claude-projects"}));
+    response.map_or_else(|_| ".".to_owned(), |success| success.value.path)
 }
-fn ok(s: &str) -> bool {
-    s.contains("\"ok\":true")
-}
-fn field(s: &str, k: &str) -> Option<String> {
-    let v = serde_json::from_str::<Value>(s).ok()?;
-    v.get(k)
-        .or_else(|| v.get("value")?.get(k))?
-        .as_str()
-        .map(ToOwned::to_owned)
+fn current_day() -> Option<String> {
+    let response: HostSuccess<NowResult> = host_call!(time_now, json!({})).ok()?;
+    let days = i64::try_from(response.value.millis / 86_400_000).ok()?;
+    Some(civil(days))
 }
 fn list(path: &str, kind: &str) -> Vec<String> {
     let mut out = Vec::new();
@@ -158,21 +141,18 @@ fn list(path: &str, kind: &str) -> Vec<String> {
             "maxEntries": 1000,
             "offset": offset
         });
-        let r = host_call(maw_fs_list, req.to_string());
-        let Ok(v) = serde_json::from_str::<Value>(&r) else {
-            break;
-        };
-        let value = v.get("value").unwrap_or(&v);
-        if let Some(a) = value.get("entries").and_then(Value::as_array) {
-            for e in a {
-                if e.get("kind").and_then(Value::as_str) == Some(kind) {
-                    if let Some(p) = e.get("path").and_then(Value::as_str) {
-                        out.push(p.to_owned());
-                    }
-                }
-            }
-        }
-        let Some(next_offset) = value.get("nextOffset").and_then(Value::as_u64) else {
+        let response: Result<HostSuccess<ListResult>, _> = host_call!(fs_list, req);
+        let Ok(response) = response else { break };
+        let next_offset = response.value.next_offset;
+        out.extend(
+            response
+                .value
+                .entries
+                .into_iter()
+                .filter(|entry| entry.kind == kind)
+                .map(|entry| entry.path),
+        );
+        let Some(next_offset) = next_offset else {
             break;
         };
         offset = next_offset;
@@ -180,18 +160,15 @@ fn list(path: &str, kind: &str) -> Vec<String> {
     out
 }
 fn read_bytes(path: &str, offset: u64) -> Option<(Vec<u8>, Option<u64>)> {
-    let r = host_call(
-        maw_fs_read,
-        json!({"path":path,"encoding":"base64","maxBytes":10485760u64,"offset":offset}).to_string(),
-    );
-    let v = serde_json::from_str::<Value>(&r).ok()?;
-    let value = v.get("value").unwrap_or(&v);
-    let content = value.get("content").and_then(Value::as_str)?;
+    let response: HostSuccess<ReadResult> = host_call!(
+        fs_read,
+        json!({"path":path,"encoding":"base64","maxBytes":10485760u64,"offset":offset})
+    )
+    .ok()?;
     let bytes = base64::engine::general_purpose::STANDARD
-        .decode(content)
+        .decode(response.value.content)
         .ok()?;
-    let next = value.get("nextOffset").and_then(Value::as_u64);
-    Some((bytes, next))
+    Some((bytes, response.value.next_offset))
 }
 
 fn collect(projects: &str, daily: bool, days: usize, today: Option<&str>) -> Vec<Agent> {
@@ -394,7 +371,45 @@ fn render_daily(a: &[Agent], days: usize, json_out: bool, today: Option<&str>) -
     let b = make_buckets(days, today);
     let total = a.iter().map(|x| x.cost).sum::<f64>();
     if json_out {
-        return serde_json::to_string_pretty(&json!({"window":days,"buckets":b,"agents":a.iter().map(|x|json!({"name":x.name,"dailyCosts":x.daily,"totalCost":x.cost,"hadActivity":x.had})).collect::<Vec<_>>(),"total":{"cost":total,"agents":a.len()}})).unwrap()+"\n";
+        #[derive(Serialize)]
+        #[serde(rename_all = "camelCase")]
+        struct DailyAgent<'a> {
+            name: &'a str,
+            daily_costs: &'a [f64],
+            total_cost: f64,
+            had_activity: &'a [bool],
+        }
+        #[derive(Serialize)]
+        struct DailyTotal {
+            cost: f64,
+            agents: usize,
+        }
+        #[derive(Serialize)]
+        struct DailyOutput<'a> {
+            window: usize,
+            buckets: Vec<String>,
+            agents: Vec<DailyAgent<'a>>,
+            total: DailyTotal,
+        }
+        let agents = a
+            .iter()
+            .map(|agent| DailyAgent {
+                name: &agent.name,
+                daily_costs: &agent.daily,
+                total_cost: agent.cost,
+                had_activity: &agent.had,
+            })
+            .collect();
+        let output = DailyOutput {
+            window: days,
+            buckets: b,
+            agents,
+            total: DailyTotal {
+                cost: total,
+                agents: a.len(),
+            },
+        };
+        return serde_json::to_string_pretty(&output).unwrap() + "\n";
     }
     if a.is_empty() {
         return format!("\x1b[90mno activity in the last {days} days\x1b[0m\n");
