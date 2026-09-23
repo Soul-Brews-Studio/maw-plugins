@@ -165,11 +165,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "maw-plugin-pdk"
+version = "1.0.0"
+dependencies = [
+ "extism-pdk",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "maw_costs_plugin"
 version = "0.1.0"
 dependencies = [
  "base64",
  "extism-pdk",
+ "maw-plugin-pdk",
  "serde",
  "serde_json",
 ]
